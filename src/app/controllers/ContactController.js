@@ -19,14 +19,61 @@ class ContactController {
     response.json(contact);
   }
 
-  // Create a new register
-  store() {
+  async store(request, response) {
+    const {
+      name, email, phone, category_id,
+    } = request.body;
 
+    if (!name) {
+      return response.status(400).json({ error: 'Name is required' });
+    }
+
+    const contactsExists = await ContactsRepository.findByEmail(email);
+
+    if (contactsExists) {
+      return response.status(400).json({ error: 'This email is already in use' });
+    }
+
+    const contact = await ContactsRepository.create({
+      name, email, phone, category_id,
+    });
+
+    response.json(contact);
   }
 
-  // update a register
-  update() {
+  async update(request, response) {
+    const { id } = request.params;
+    const {
+      name,
+      email,
+      phone,
+      category_id,
+    } = request.body;
 
+    const contactsExists = await ContactsRepository.findById(id);
+
+    if (!contactsExists) {
+      return response.status(404).json({ error: 'Contact not found!' });
+    }
+
+    if (!name) {
+      return response.status(400).json({ error: 'Name is required!' });
+    }
+
+    const contactEmail = await ContactsRepository.findByEmail(email);
+
+    if (contactEmail && contactEmail.id !== id) {
+      return response.status(400).json({ error: 'This email is already in use' });
+    }
+
+    const contact = await ContactsRepository.update(id, {
+      name,
+      email,
+      phone,
+      category_id,
+    });
+
+    response.json(contact);
   }
 
   async delete(request, response) {
